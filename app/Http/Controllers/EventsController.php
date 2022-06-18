@@ -181,6 +181,7 @@ class EventsController extends BaseController
         return Event::with('workshops')
             ->whereIn('id',
                 Workshop::select('event_id')
+                    ->distinct()
                     ->where('start', '>', (Carbon::now())->toDateTimeString())
                     ->get()
             )
