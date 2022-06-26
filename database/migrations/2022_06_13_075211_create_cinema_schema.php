@@ -49,7 +49,6 @@ class CreateCinemaSchema extends Migration
             $table->increments('id');
             $table->string('name');
             $table->integer('cinema_id')->unsigned();
-            $table->integer('price');
 
             $table->foreign('cinema_id')->references('id')->on('cinemas');
 
@@ -92,6 +91,7 @@ class CreateCinemaSchema extends Migration
             $table->increments('id');
             $table->integer('cinema_hall_id')->unsigned();
             $table->integer('movie_id')->unsigned();
+            $table->integer('price');
             $table->integer('status')->default(0);
             $table->dateTime('start_time');
             $table->dateTime('end_time');

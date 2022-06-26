@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Barbershop;
+use App\Models\BarbershopEvent;
 use App\Models\MenuItem;
 use App\Models\Workshop;
 use App\Models\Event;
@@ -12,13 +14,8 @@ use Illuminate\Support\Facades\DB;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     *
-     * @return void
-     */
-
-    protected function seedMenu() {
+    protected function seedMenu(): void
+    {
         $rootItem = MenuItem::create([
             'name' => 'All events',
             'url' => '/events',
@@ -61,7 +58,8 @@ class DatabaseSeeder extends Seeder
         ]);
     }
 
-    protected function seedEvents() {
+    protected function seedEvents(): void
+    {
         $date = (new Carbon())->subYear()->setDay(21);
 
         $lcon1 = Event::create([
@@ -114,11 +112,115 @@ class DatabaseSeeder extends Seeder
         ]);
     }
 
-    public function run()
+    protected function seedBarbershop(): void
+    {
+
+        $barbershop = Barbershop::create([
+            'name' => 'Barbershop One'
+        ]);
+
+        $schedule_settings = json_encode([
+            'days' => [
+                0 => [
+                    'workday' => false,
+                    'start_time' => null,
+                    'end_time' => null,
+                ],
+                1 => [
+                    'workday' => true,
+                    'start_time' => '08:00',
+                    'end_time' => '20:00',
+                ],
+                2 => [
+                    'workday' => true,
+                    'start_time' => '08:00',
+                    'end_time' => '20:00',
+                ],
+                3 => [
+                    'workday' => true,
+                    'start_time' => '08:00',
+                    'end_time' => '20:00',
+                ],
+                4 => [
+                    'workday' => true,
+                    'start_time' => '08:00',
+                    'end_time' => '20:00',
+                ],
+                5 => [
+                    'workday' => true,
+                    'start_time' => '08:00',
+                    'end_time' => '20:00',
+                ],
+                6 => [
+                    'workday' => true,
+                    'start_time' => '10:00',
+                    'end_time' => '22:00',
+                ],
+            ],
+            'breaks' => [
+                'lunch break' => [
+                    'start_time' => '12:00',
+                    'end_time' => '13:00'
+                ],
+                'cleaning break' => [
+                    'start_time' => '15:00',
+                    'end_time' => '16:00'
+                ],
+            ]
+        ], JSON_THROW_ON_ERROR);
+
+        /**
+         * Men Haircut
+         *   slots for the next 7 days, sunday off
+         *   from 08:00-20:00 monday to friday
+         *   from 10:00-22:00 saturday
+         *   lunch break at 12:00-13:00
+         *   cleaning break at 15:00-16:00
+         *   max 3 clients per slot
+         *   slots every 10 minutes
+         *   5 minutes cleanup break between slots
+         *   the third day starting from now is a public holiday
+         */
+        BarbershopEvent::create([
+            'barbershop_id' => $barbershop->id,
+            'name' => 'Men Haircut',
+            'days_duration_slots' => 7,
+            'max_clients_per_slot' => 3,
+            'minutes_every_slots' => 10,
+            'minutes_break_between_slots' => 5,
+            'nth_day_is_holiday' => 3,
+            'schedule_settings' => $schedule_settings,
+        ]);
+        /**
+         * Woman Haircut
+         *   slots for the next 7 days, sunday off
+         *   lunch break at 12:00-13:00
+         *   from 08:00-20:00 monday to friday
+         *   from 10:00-22:00 saturday
+         *   cleaning break at 15:00-16:00
+         *   slots every 1 hour
+         *   10 minutes cleanup break
+         *   max 3 clients per slot
+         *   the third day starting from now is a public holiday
+         */
+        BarbershopEvent::create([
+            'barbershop_id' => $barbershop->id,
+            'name' => 'Woman Haircut',
+            'days_duration_slots' => 7,
+            'max_clients_per_slot' => 3,
+            'minutes_every_slots' => 60,
+            'minutes_break_between_slots' => 10,
+            'nth_day_is_holiday' => 3,
+            'schedule_settings' => $schedule_settings,
+        ]);
+    }
+
+    public function run(): void
     {
         DB::transaction(function($table) {
             $this->seedEvents();
             $this->seedMenu();
+            $this->seedBarbershop();
         });
     }
 }

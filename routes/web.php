@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BarbershopController;
 use App\Http\Controllers\EventsController;
 use App\Http\Controllers\MenuController;
 use Illuminate\Support\Facades\Route;
@@ -24,3 +25,6 @@ Route::get('/events', [EventsController::class, 'getEventsWithWorkshops']);
 Route::get('/futureevents', [EventsController::class, 'getFutureEventsWithWorkshops']);
 Route::get('/warmupevents', [EventsController::class, 'getWarmupEvents']);
 Route::get('/menu', [MenuController::class, 'getMenuItems']);
+
+Route::get('/getslots', [BarbershopController::class, 'getAvailableSlots']);
+Route::get('/book', [BarbershopController::class, 'bookSlot']);
