@@ -46,6 +46,8 @@ class BootstrapTestDatabase extends Migration
      */
     public function down()
     {
-        //
+        Schema::drop('menu_items');
+        Schema::drop('workshops');
+        Schema::drop('events');
     }
 }

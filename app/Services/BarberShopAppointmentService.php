@@ -8,6 +8,9 @@ use Exception;
 use App\Models\BarbershopEvent;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
+use Psr\SimpleCache\InvalidArgumentException;
 
 class BarberShopAppointmentService
 {
@@ -40,6 +43,32 @@ class BarberShopAppointmentService
     }
 
     /**
+     * @param int $event_id
+     * @param string $dateTime
+     * @return array
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     * @throws InvalidArgumentException
+     * @throws Exception
+     */
+    public function cacheGetOrSetAvailableSlotsByDay(int $event_id, string $dateTime): array
+    {
+        $cacheKey = 'slots_' . $event_id . '_' . $dateTime;
+        $cacheData = cache()->get($cacheKey);
+        if ($cacheData !== null) {
+            return $cacheData;
+        }
+
+        $cacheData = $this->getAvailableSlotsByDay(
+            $event_id,
+            $dateTime
+        );
+        cache()->set($cacheKey, $cacheData);
+
+        return $cacheData;
+    }
+
+    /**
      * @throws Exception
      */
     public function bookSlot(
@@ -67,13 +96,17 @@ class BarberShopAppointmentService
                     'lastname' => $lastName,
                 ]);
 
+                DB::commit();
+
+                cache()->delete('slots_' . $event_id . '_' . $lookingTime->format('Y-m-d'));
+
                 return $model;
             }
-            DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
             throw new Exception($e->getMessage(), 500);
         }
+        DB::rollBack();
 
         throw new Exception('You can\'t book an appointment');
     }
@@ -146,7 +179,7 @@ class BarberShopAppointmentService
             ->get()
             ->toArray();
 
-        return Arr::pluck($bookings, 'count', BarbershopEvent::SETTING_START_TIME, );
+        return Arr::pluck($bookings, 'count', BarbershopEvent::SETTING_START_TIME);
     }
 
     private function getAvailableData(
@@ -178,7 +211,7 @@ class BarberShopAppointmentService
 
         return [
             'isAvailable' => $availableSlots > 0 && $isAvailable,
-            'available_slots' => max($availableSlots, 0)
+            'available_slots' => $isAvailable ? max($availableSlots, 0) : 0
         ];
     }
 }

@@ -27,4 +27,5 @@ Route::get('/warmupevents', [EventsController::class, 'getWarmupEvents']);
 Route::get('/menu', [MenuController::class, 'getMenuItems']);
 
 Route::get('/getslots', [BarbershopController::class, 'getAvailableSlots']);
-Route::get('/book', [BarbershopController::class, 'bookSlot']);
+Route::get('/barbershops', [BarbershopController::class, 'getBarbershops']);
+Route::post('/book', [BarbershopController::class, 'bookSlot']);

@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\BarberShopAvailableSlotsRequest;
-use App\Services\BarberShopAppointmentService;
+use App\Models\Barbershop;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Services\BarberShopAppointmentService;
 
 class BarbershopController extends BaseController
 {
@@ -28,7 +28,7 @@ class BarbershopController extends BaseController
 
             if ($validator->passes()) {
                 return $this->sendResponse(
-                    $this->appointmentService->getAvailableSlotsByDay(
+                    $this->appointmentService->cacheGetOrSetAvailableSlotsByDay(
                         $request->id,
                         $request->dateTime
                     )
@@ -67,5 +67,10 @@ class BarbershopController extends BaseController
         } catch (Exception $e) {
             return $this->sendError($e->getMessage());
         }
+    }
+
+    public function getBarbershops()
+    {
+        return $this->sendResponse(Barbershop::with('events')->get());
     }
 }

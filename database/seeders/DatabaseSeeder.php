@@ -119,7 +119,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Barbershop One'
         ]);
 
-        $schedule_settings = json_encode([
+        $schedule_settings = [
             'days' => [
                 0 => [
                     'workday' => false,
@@ -167,7 +167,7 @@ class DatabaseSeeder extends Seeder
                     'end_time' => '16:00'
                 ],
             ]
-        ], JSON_THROW_ON_ERROR);
+        ];
 
         /**
          * Men Haircut
