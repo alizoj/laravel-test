@@ -17,7 +17,6 @@ use Illuminate\Support\Carbon;
  * @property int $max_clients_per_slot
  * @property int $minutes_every_slots
  * @property int $minutes_break_between_slots
- * @property int $nth_day_is_holiday
  * @property mixed $schedule_settings
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -33,6 +32,7 @@ class BarbershopEvent extends Model
     public const SETTING_START_TIME = 'start_time';
     public const SETTING_END_TIME = 'end_time';
     public const SETTING_BREAKS = 'breaks';
+    public const SETTING_HOLIDAYS = 'holidays';
 
     public function appointments(): HasMany
     {

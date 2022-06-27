@@ -25,7 +25,6 @@ return new class extends Migration
             $table->integer('max_clients_per_slot');
             $table->integer('minutes_every_slots');
             $table->integer('minutes_break_between_slots');
-            $table->integer('nth_day_is_holiday');
             $table->jsonb('schedule_settings'); //breaks, work_times
 
             $table->foreign('barbershop_id')->references('id')->on('barbershops');

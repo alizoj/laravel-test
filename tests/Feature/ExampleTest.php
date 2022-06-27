@@ -2,12 +2,73 @@
 
 namespace Tests\Feature;
 
+use App\Models\BarbershopEvent;
+use Faker\Provider\Person;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
+    use RefreshDatabase;
+
+    protected bool $seed = true;
+    private array $schedule_settings = [
+        BarbershopEvent::SETTING_DAYS => [
+            0 => [
+                BarbershopEvent::SETTING_WORKDAY => false,
+                BarbershopEvent::SETTING_END_TIME => null,
+                BarbershopEvent::SETTING_START_TIME => null,
+            ],
+            1 => [
+                BarbershopEvent::SETTING_WORKDAY => true,
+                BarbershopEvent::SETTING_END_TIME => '20:00',
+                BarbershopEvent::SETTING_START_TIME => '08:00',
+            ],
+            2 => [
+                BarbershopEvent::SETTING_WORKDAY => true,
+                BarbershopEvent::SETTING_END_TIME => '20:00',
+                BarbershopEvent::SETTING_START_TIME => '08:00',
+            ],
+            3 => [
+                BarbershopEvent::SETTING_WORKDAY => true,
+                BarbershopEvent::SETTING_END_TIME => '20:00',
+                BarbershopEvent::SETTING_START_TIME => '08:00',
+            ],
+            4 => [
+                BarbershopEvent::SETTING_WORKDAY => true,
+                BarbershopEvent::SETTING_END_TIME => '20:00',
+                BarbershopEvent::SETTING_START_TIME => '08:00',
+            ],
+            5 => [
+                BarbershopEvent::SETTING_WORKDAY => true,
+                BarbershopEvent::SETTING_END_TIME => '20:00',
+                BarbershopEvent::SETTING_START_TIME => '08:00',
+            ],
+            6 => [
+                BarbershopEvent::SETTING_WORKDAY => true,
+                BarbershopEvent::SETTING_END_TIME => '22:00',
+                BarbershopEvent::SETTING_START_TIME => '10:00',
+            ],
+        ],
+        BarbershopEvent::SETTING_BREAKS => [
+            'lunch break' => [
+                BarbershopEvent::SETTING_END_TIME => '13:00',
+                BarbershopEvent::SETTING_START_TIME => '12:00',
+            ],
+            'cleaning break' => [
+                BarbershopEvent::SETTING_END_TIME => '16:00',
+                BarbershopEvent::SETTING_START_TIME => '15:00',
+            ],
+        ],
+        BarbershopEvent::SETTING_HOLIDAYS => [
+            '2020-06-29' => true,
+            '2020-07-02' => true,
+        ]
+    ];
+
     public function testWarmupEvents()
     {
         $datePast = (new Carbon())->subYear()->setDay(21);
@@ -69,57 +130,7 @@ class ExampleTest extends TestCase
 
     public function testBarbershops()
     {
-        $schedule_settings = [
-            'days' => [
-                0 => [
-                    'workday' => false,
-                    'end_time' => null,
-                    'start_time' => null,
-                ],
-                1 => [
-                    'workday' => true,
-                    'end_time' => '20:00',
-                    'start_time' => '08:00',
-                ],
-                2 => [
-                    'workday' => true,
-                    'end_time' => '20:00',
-                    'start_time' => '08:00',
-                ],
-                3 => [
-                    'workday' => true,
-                    'end_time' => '20:00',
-                    'start_time' => '08:00',
-                ],
-                4 => [
-                    'workday' => true,
-                    'end_time' => '20:00',
-                    'start_time' => '08:00',
-                ],
-                5 => [
-                    'workday' => true,
-                    'end_time' => '20:00',
-                    'start_time' => '08:00',
-                ],
-                6 => [
-                    'workday' => true,
-                    'end_time' => '22:00',
-                    'start_time' => '10:00',
-                ],
-            ],
-            'breaks' => [
-                'lunch break' => [
-                    'end_time' => '13:00',
-                    'start_time' => '12:00'
-                ],
-                'cleaning break' => [
-                    'end_time' => '16:00',
-                    'start_time' => '15:00'
-                ],
-            ]
-        ];
-
-        $response = $this->get('/barbershops');
+        $response = $this->getJson('/api/barbershops');
         $response->assertStatus(200)
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.name', 'Barbershop One')
@@ -130,8 +141,7 @@ class ExampleTest extends TestCase
             ->assertJsonPath('data.0.events.0.max_clients_per_slot', 3)
             ->assertJsonPath('data.0.events.0.minutes_every_slots', 10)
             ->assertJsonPath('data.0.events.0.minutes_break_between_slots', 5)
-            ->assertJsonPath('data.0.events.0.nth_day_is_holiday', 3)
-            ->assertJsonPath('data.0.events.0.schedule_settings', $schedule_settings)
+            ->assertJsonPath('data.0.events.0.schedule_settings', $this->schedule_settings)
             ->assertJsonPath('data.0.events.1.id', 2)
             ->assertJsonPath('data.0.events.1.barbershop_id', 1)
             ->assertJsonPath('data.0.events.1.name', 'Woman Haircut')
@@ -139,127 +149,144 @@ class ExampleTest extends TestCase
             ->assertJsonPath('data.0.events.1.max_clients_per_slot', 3)
             ->assertJsonPath('data.0.events.1.minutes_every_slots', 60)
             ->assertJsonPath('data.0.events.1.minutes_break_between_slots', 10)
-            ->assertJsonPath('data.0.events.1.nth_day_is_holiday', 3)
-            ->assertJsonPath('data.0.events.1.schedule_settings', $schedule_settings);
+            ->assertJsonPath('data.0.events.1.schedule_settings', $this->schedule_settings);
     }
 
-    public function testBarbershopSlots()
+    public function testBarbershopSlots(): void
     {
-        $response = $this->get('/getslots?id=1&dateTime=2022-06-27');
-        $response->assertStatus(200)
-            ->assertJsonCount(49, 'data')
-            ->assertJsonPath('data.08:00', [
-                'isAvailable' => true,
-                'available_slots' => 3
-            ])->assertJsonPath('data.12:00', [
-                'isAvailable' => false,
-                'available_slots' => 0
-            ])->assertJsonPath('data.13:00', [
-                'isAvailable' => true,
-                'available_slots' => 3
-            ]);
-
-        $response = $this->get('/getslots?id=2&dateTime=2022-06-27');
-        $response->assertStatus(200)
-            ->assertJsonCount(11, 'data')
-            ->assertJsonPath('data.08:00', [
-                'isAvailable' => true,
-                'available_slots' => 3
-            ])->assertJsonPath('data.12:40', [
-                'isAvailable' => false,
-                'available_slots' => 0
-            ])->assertJsonPath('data.13:50', [
-                'isAvailable' => true,
-                'available_slots' => 3
-            ]);
-
-        $response = $this->get('/getslots?id=1&dateTime=2022-06-28'); //holiday
+        $this->travel(-1)->days(); //yesterday (out of range)
+        $response = $this->getJson(
+            sprintf('/api/getslots?id=%s&dateTime=%s', 1, now()->format('Y-m-d'))
+        );
         $response->assertStatus(404);
 
-        $response = $this->get('/getslots?id=2&dateTime=2022-06-28'); //holiday
-        $response->assertStatus(404);
+        $events = BarbershopEvent::all();
+        foreach ($events as $event) {
+            $this->travelTo($event->created_at);
+            $totalDays = $event->days_duration_slots;
 
-        $response = $this->get('/getslots?id=1&dateTime=2022-06-20');
-        $response->assertStatus(404);
+            for ($i = 0; $i < $totalDays; $i++) {
+                $this->travel($i)->days();
+                $dayData = $event->schedule_settings[BarbershopEvent::SETTING_DAYS][now()->dayOfWeek];
+                $response = $this->getJson(
+                    sprintf('/api/getslots?id=%s&dateTime=%s', $event->id, now()->format('Y-m-d'))
+                );
 
-        $response = $this->get('/getslots?id=2&dateTime=2022-06-20');
-        $response->assertStatus(404);
+                if ($this->isWorkDay(now(), $event, $event->schedule_settings) !== true) {
+                    //check invalid tests
+                    $response->assertStatus(404);
+                    $bookResponse = $this->postJson('/api/book', [
+                        "id" => $event->id,
+                        "dateTime" => now()->format('Y-m-d')
+                            . ' '
+                            . $dayData[BarbershopEvent::SETTING_START_TIME]
+                            . ':00',
+                        "email" => Str::random(10) . '@gmail.com',
+                        "firstName" => Person::firstNameMale(),
+                        "lastName" => Person::firstNameFemale()
+                    ]);
+                    $bookResponse->assertStatus(404); //can't book
+                } else {
+                    //check valid tests
+                    $response->assertStatus(200)
+                        ->assertJsonPath(
+                            'data.' . $dayData[BarbershopEvent::SETTING_START_TIME],
+                            [
+                                'isAvailable' => true,
+                                'available_slots' => $event->max_clients_per_slot
+                            ]
+                        )
+                        ->assertJsonPath(
+                            'data.' .
+                            Carbon::createFromFormat('H:i', $dayData[BarbershopEvent::SETTING_START_TIME])
+                                ->addMinutes($event->minutes_every_slots + $event->minutes_break_between_slots)
+                                ->format('H:i'),
+                            [
+                                'isAvailable' => true,
+                                'available_slots' => $event->max_clients_per_slot
+                            ]
+                        )
+                        // invalid ex. 09:05
+                        ->assertJsonMissingExact([
+                            'data' =>
+                                Carbon::createFromFormat('H:i', $dayData[BarbershopEvent::SETTING_START_TIME])
+                                    ->addMinutes($event->minutes_every_slots)->format('H:i')
+
+                        ])
+                        //last time ex. 20:00 edge case
+                        ->assertJsonMissingExact([
+                            'data' => $dayData[BarbershopEvent::SETTING_END_TIME]
+
+                        ]);
+
+                    // lets book
+                    for ($slot = $event->max_clients_per_slot; $slot > 0; $slot--) {
+                        $response = $this->getJson(
+                            sprintf('/api/getslots?id=%s&dateTime=%s', $event->id, now()->format('Y-m-d'))
+                        );
+                        $response->assertStatus(200)
+                            ->assertJsonPath(
+                                'data.' . $dayData[BarbershopEvent::SETTING_START_TIME],
+                                [
+                                    'isAvailable' => true,
+                                    'available_slots' => $slot
+                                ]
+                            );
+
+                        $bookResponse = $this->postJson('/api/book', [
+                            "id" => $event->id,
+                            "dateTime" => now()->format('Y-m-d')
+                                . ' '
+                                . $dayData[BarbershopEvent::SETTING_START_TIME]
+                                . ':00',
+                            "email" => Str::random(10) . '@gmail.com',
+                            "firstName" => Person::firstNameMale(),
+                            "lastName" => Person::firstNameFemale()
+                        ]);
+                        $bookResponse->assertStatus(200); //can book
+                    }
+
+                    $response = $this->getJson(
+                        sprintf('/api/getslots?id=%s&dateTime=%s', $event->id, now()->format('Y-m-d'))
+                    );
+                    $response->assertStatus(200)
+                        ->assertJsonPath(
+                            'data.' . $dayData[BarbershopEvent::SETTING_START_TIME],
+                            [
+                                'isAvailable' => false,
+                                'available_slots' => 0
+                            ]
+                        );
+
+                    $bookResponse = $this->postJson('/api/book', [
+                        "id" => $event->id,
+                        "dateTime" => now()->format('Y-m-d')
+                            . ' '
+                            . $dayData[BarbershopEvent::SETTING_START_TIME]
+                            . ':00',
+                        "email" => Str::random(10) . '@gmail.com',
+                        "firstName" => Person::firstNameMale(),
+                        "lastName" => Person::firstNameFemale()
+                    ]);
+                    $bookResponse->assertStatus(404); //can't book because 3 times did
+                }
+            }
+        }
     }
 
-    public function testBarbershopBooking()
+    private function isWorkDay(Carbon $lookingDay, BarbershopEvent $event, array $settings): bool
     {
-        $bookDataMen = [
-            "id" => 1,
-            "dateTime" => "2022-07-01 09:10:00",
-            "email" => "alibek@mail.com",
-            "firstName" => "Alibek",
-            "lastName" => "Yermek"
-        ];
+        $diffDays = $event->created_at->diffInDays($lookingDay->format('Y-m-d H:i:s')) + 1;
+        if ($diffDays > $event->days_duration_slots
+            || now()->diffInDays($lookingDay, false) < 0) {
+            return false;
+        }
 
-        $bookDataWomen = [
-            "id" => 2,
-            "dateTime" => "2022-07-01 09:10:00",
-            "email" => "alibek@mail.com",
-            "firstName" => "Alibek",
-            "lastName" => "Yermek"
-        ];
+        if ($settings[$event::SETTING_DAYS][$lookingDay->dayOfWeek][$event::SETTING_WORKDAY] !== true
+            || Arr::has($settings[$event::SETTING_HOLIDAYS], $lookingDay->format('Y-m-d'))) {
+            return false;
+        }
 
-        $bookWrongData = [
-            "id" => 1,
-            "dateTime" => "2022-07-01 09:10:00",
-            "email" => "alibekNotEmail",
-            "firstName" => "Alibek",
-        ];
-
-        $response = $this->post('/book', $bookDataMen);
-        $response->assertStatus(404);
-
-        $response = $this->post('/book', $bookDataWomen);
-        $response->assertStatus(200);
-
-        $response = $this->get('/getslots?id=2&dateTime=2022-07-01');
-        $response->assertStatus(200)
-            ->assertJsonCount(11, 'data')
-            ->assertJsonPath('data.08:00', [
-                'isAvailable' => true,
-                'available_slots' => 3
-            ])->assertJsonPath('data.09:10', [
-                'isAvailable' => true,
-                'available_slots' => 2
-            ]);
-
-        $response = $this->post('/book', $bookDataWomen);
-        $response->assertStatus(200);
-
-        $response = $this->get('/getslots?id=2&dateTime=2022-07-01');
-        $response->assertStatus(200)
-            ->assertJsonCount(11, 'data')
-            ->assertJsonPath('data.08:00', [
-                'isAvailable' => true,
-                'available_slots' => 3
-            ])->assertJsonPath('data.09:10', [
-                'isAvailable' => true,
-                'available_slots' => 1
-            ]);
-
-        $response = $this->post('/book', $bookDataWomen);
-        $response->assertStatus(200);
-
-        $response = $this->get('/getslots?id=2&dateTime=2022-07-01');
-        $response->assertStatus(200)
-            ->assertJsonCount(11, 'data')
-            ->assertJsonPath('data.08:00', [
-                'isAvailable' => true,
-                'available_slots' => 3
-            ])->assertJsonPath('data.09:10', [
-                'isAvailable' => false,
-                'available_slots' => 0
-            ]);
-
-        $response = $this->post('/book', $bookDataWomen);
-        $response->assertStatus(404);
-
-        $response = $this->post('/book', $bookWrongData);
-        $response->assertStatus(404);
+        return true;
     }
 }

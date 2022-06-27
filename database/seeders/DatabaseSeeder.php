@@ -9,7 +9,6 @@ use App\Models\Workshop;
 use App\Models\Event;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 
 class DatabaseSeeder extends Seeder
@@ -63,7 +62,7 @@ class DatabaseSeeder extends Seeder
         $date = (new Carbon())->subYear()->setDay(21);
 
         $lcon1 = Event::create([
-            'name' => 'Laravel convention '.$date->year
+            'name' => 'Laravel convention ' . $date->year
         ]);
 
         Workshop::create([
@@ -76,7 +75,7 @@ class DatabaseSeeder extends Seeder
         $date = (new Carbon())->addYears(1);
 
         $lcon2 = Event::create([
-            'name' => 'Laravel convention '.$date->year
+            'name' => 'Laravel convention ' . $date->year
         ]);
 
         Workshop::create([
@@ -94,7 +93,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $rcon = Event::create([
-            'name' => 'React convention '.$date->year
+            'name' => 'React convention ' . $date->year
         ]);
 
         Workshop::create([
@@ -114,58 +113,61 @@ class DatabaseSeeder extends Seeder
 
     protected function seedBarbershop(): void
     {
-
         $barbershop = Barbershop::create([
             'name' => 'Barbershop One'
         ]);
 
         $schedule_settings = [
-            'days' => [
+            BarbershopEvent::SETTING_DAYS => [
                 0 => [
-                    'workday' => false,
-                    'start_time' => null,
-                    'end_time' => null,
+                    BarbershopEvent::SETTING_WORKDAY => false,
+                    BarbershopEvent::SETTING_START_TIME => null,
+                    BarbershopEvent::SETTING_END_TIME => null,
                 ],
                 1 => [
-                    'workday' => true,
-                    'start_time' => '08:00',
-                    'end_time' => '20:00',
+                    BarbershopEvent::SETTING_WORKDAY => true,
+                    BarbershopEvent::SETTING_START_TIME => '08:00',
+                    BarbershopEvent::SETTING_END_TIME => '20:00',
                 ],
                 2 => [
-                    'workday' => true,
-                    'start_time' => '08:00',
-                    'end_time' => '20:00',
+                    BarbershopEvent::SETTING_WORKDAY => true,
+                    BarbershopEvent::SETTING_START_TIME => '08:00',
+                    BarbershopEvent::SETTING_END_TIME => '20:00',
                 ],
                 3 => [
-                    'workday' => true,
-                    'start_time' => '08:00',
-                    'end_time' => '20:00',
+                    BarbershopEvent::SETTING_WORKDAY => true,
+                    BarbershopEvent::SETTING_START_TIME => '08:00',
+                    BarbershopEvent::SETTING_END_TIME => '20:00',
                 ],
                 4 => [
-                    'workday' => true,
-                    'start_time' => '08:00',
-                    'end_time' => '20:00',
+                    BarbershopEvent::SETTING_WORKDAY => true,
+                    BarbershopEvent::SETTING_START_TIME => '08:00',
+                    BarbershopEvent::SETTING_END_TIME => '20:00',
                 ],
                 5 => [
-                    'workday' => true,
-                    'start_time' => '08:00',
-                    'end_time' => '20:00',
+                    BarbershopEvent::SETTING_WORKDAY => true,
+                    BarbershopEvent::SETTING_START_TIME => '08:00',
+                    BarbershopEvent::SETTING_END_TIME => '20:00',
                 ],
                 6 => [
-                    'workday' => true,
-                    'start_time' => '10:00',
-                    'end_time' => '22:00',
+                    BarbershopEvent::SETTING_WORKDAY => true,
+                    BarbershopEvent::SETTING_START_TIME => '10:00',
+                    BarbershopEvent::SETTING_END_TIME => '22:00',
                 ],
             ],
-            'breaks' => [
+            BarbershopEvent::SETTING_BREAKS => [
                 'lunch break' => [
-                    'start_time' => '12:00',
-                    'end_time' => '13:00'
+                    BarbershopEvent::SETTING_START_TIME => '12:00',
+                    BarbershopEvent::SETTING_END_TIME => '13:00'
                 ],
                 'cleaning break' => [
-                    'start_time' => '15:00',
-                    'end_time' => '16:00'
+                    BarbershopEvent::SETTING_START_TIME => '15:00',
+                    BarbershopEvent::SETTING_END_TIME => '16:00'
                 ],
+            ],
+            BarbershopEvent::SETTING_HOLIDAYS => [
+                '2020-06-29' => true,
+                '2020-07-02' => true,
             ]
         ];
 
@@ -188,7 +190,6 @@ class DatabaseSeeder extends Seeder
             'max_clients_per_slot' => 3,
             'minutes_every_slots' => 10,
             'minutes_break_between_slots' => 5,
-            'nth_day_is_holiday' => 3,
             'schedule_settings' => $schedule_settings,
         ]);
         /**
@@ -210,14 +211,13 @@ class DatabaseSeeder extends Seeder
             'max_clients_per_slot' => 3,
             'minutes_every_slots' => 60,
             'minutes_break_between_slots' => 10,
-            'nth_day_is_holiday' => 3,
             'schedule_settings' => $schedule_settings,
         ]);
     }
 
     public function run(): void
     {
-        DB::transaction(function($table) {
+        DB::transaction(function ($table) {
             $this->seedEvents();
             $this->seedMenu();
             $this->seedBarbershop();

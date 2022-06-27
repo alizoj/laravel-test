@@ -25,7 +25,3 @@ Route::get('/events', [EventsController::class, 'getEventsWithWorkshops']);
 Route::get('/futureevents', [EventsController::class, 'getFutureEventsWithWorkshops']);
 Route::get('/warmupevents', [EventsController::class, 'getWarmupEvents']);
 Route::get('/menu', [MenuController::class, 'getMenuItems']);
-
-Route::get('/getslots', [BarbershopController::class, 'getAvailableSlots']);
-Route::get('/barbershops', [BarbershopController::class, 'getBarbershops']);
-Route::post('/book', [BarbershopController::class, 'bookSlot']);

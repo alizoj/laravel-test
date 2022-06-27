@@ -69,7 +69,7 @@ class BarberShopAppointmentService
     }
 
     /**
-     * @throws Exception
+     * @throws Exception|InvalidArgumentException
      */
     public function bookSlot(
         int $event_id,
@@ -85,7 +85,7 @@ class BarberShopAppointmentService
             $availableTimes = $this->getAvailableSlotsByDay($event_id, $lookingTime->format('Y-m-d'));
             if (Arr::exists($availableTimes, $workTime)) {
                 if ($availableTimes[$workTime]['isAvailable'] !== true) {
-                    throw new Exception('You can\'t book an appointment');
+                    throw new Exception('You can\'t book an appointment', 404);
                 }
 
                 $model = BarbershopAppointment::create([
@@ -98,8 +98,6 @@ class BarberShopAppointmentService
 
                 DB::commit();
 
-                cache()->delete('slots_' . $event_id . '_' . $lookingTime->format('Y-m-d'));
-
                 return $model;
             }
         } catch (Exception $e) {
@@ -108,7 +106,7 @@ class BarberShopAppointmentService
         }
         DB::rollBack();
 
-        throw new Exception('You can\'t book an appointment');
+        throw new Exception('You can\'t book an appointment', 404);
     }
 
     /**
@@ -118,13 +116,13 @@ class BarberShopAppointmentService
     {
         $diffDays = $event->created_at->diffInDays($lookingDay->format('Y-m-d H:i:s')) + 1;
         if ($diffDays > $event->days_duration_slots
-            || $diffDays === $event->nth_day_is_holiday
             || Carbon::now()->diffInDays($lookingDay, false) < 0) {
             throw new Exception('There are no any events', 404);
         }
 
-        if ($settings[$event::SETTING_DAYS][$lookingDay->dayOfWeek][$event::SETTING_WORKDAY] !== true) {
-            throw new Exception('This day is not working day');
+        if ($settings[$event::SETTING_DAYS][$lookingDay->dayOfWeek][$event::SETTING_WORKDAY] !== true
+            || Arr::has($settings[$event::SETTING_HOLIDAYS], $lookingDay->format('Y-m-d'))) {
+            throw new Exception('This day is not working day', 404);
         }
     }
 
@@ -140,7 +138,7 @@ class BarberShopAppointmentService
         $endOfWorkDay = $lookingDay->copy()->setTimeFromTimeString($end_time);
         $appointments = $this->getAppointmentsByIdAndDay($event->id, $lookingDay, $start_time, $end_time);
 
-        while ($startOfWorkDay <= $endOfWorkDay) {
+        while ($startOfWorkDay < $endOfWorkDay) {
             $slots[$startOfWorkDay->format('H:i')] =
                 $this->getAvailableData(
                     $startOfWorkDay,
